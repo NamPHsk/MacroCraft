@@ -4,16 +4,16 @@
   "version": "${version}",
 
   "name": "MacroCraft",
-  "description": "MacroCraft is a revolutionary mod that empowers players to record, save, and execute complex sequences of actions with unparalleled ease.",
+  "description": "MacroCraft records, saves, and replays client input macros.",
   "authors": ["Boxadactle"],
   "contact": {},
 
   "license": "MIT",
   "icon": "icon.png",
 
-  "environment": "*",
+  "environment": "client",
   "entrypoints": {
-    "main": [
+    "client": [
       "dev.boxadactle.macrocraft.fabric.MacroCraftFabric"
     ],
     "modmenu": [
