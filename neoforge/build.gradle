@@ -7,6 +7,11 @@ architectury {
     neoForge()
 }
 
+sourceSets.main.java {
+    exclude 'dev/boxadactle/macrocraft/neoforge/command/**'
+    exclude 'dev/boxadactle/macrocraft/neoforge/MacrocraftCommand.java'
+}
+
 configurations {
     common {
         canBeResolved = true
