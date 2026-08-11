@@ -1,6 +1,5 @@
 package dev.boxadactle.macrocraft.hud;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import dev.boxadactle.boxlib.layouts.RenderingLayout;
 import dev.boxadactle.boxlib.layouts.component.CenteredParagraphComponent;
 import dev.boxadactle.boxlib.layouts.layout.CenteredLayout;
@@ -9,20 +8,18 @@ import dev.boxadactle.boxlib.util.GuiUtils;
 import dev.boxadactle.boxlib.util.RenderUtils;
 import dev.boxadactle.macrocraft.MacroCraft;
 import dev.boxadactle.macrocraft.MacroCraftKeybinds;
-import dev.boxadactle.macrocraft.listeners.KeyAccessor;
 import dev.boxadactle.macrocraft.macro.MacroState;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class MacroPlayHud {
 
-    public static final ResourceLocation PROGRESS_BAR = new ResourceLocation(MacroCraft.MOD_ID, "progress/progress_bar");
+    public static final Identifier PROGRESS_BAR = Identifier.fromNamespaceAndPath(MacroCraft.MOD_ID, "progress/progress_bar");
+    public static final Identifier PROGRESS_BACKGROUND = Identifier.fromNamespaceAndPath(MacroCraft.MOD_ID, "progress/progress_empty");
 
-    public static final ResourceLocation PROGRESS_BACKGROUND = new ResourceLocation(MacroCraft.MOD_ID, "progress/progress_empty");
-
-    public static void render(GuiGraphics graphics) {
-        // information at the top of the screen
+    public static void render(GuiGraphicsExtractor graphics) {
         RowLayout information = new RowLayout(0, 0, 10);
 
         information.addComponent(new CenteredParagraphComponent(
@@ -35,7 +32,7 @@ public class MacroPlayHud {
                 Component.translatable("hud.macrocraft.playing", MacroState.MACRO_NAME),
                 Component.translatable(
                         "hud.macrocraft.hide",
-                        GuiUtils.brackets(((KeyAccessor)MacroCraftKeybinds.hideGui).getKey().getDisplayName())
+                        GuiUtils.brackets(MacroCraftKeybinds.hideGui.getTranslatedKeyMessage())
                 )
         ));
 
@@ -50,52 +47,39 @@ public class MacroPlayHud {
                 information.calculateRect().getHeight() + 5,
                 information
         );
-
         centeredInformation.render(graphics);
 
-        // controls at the bottom of the screen
         RenderingLayout controls = MacroControls.createButtons(
                 graphics,
                 MacroState.LOADED_MACRO.isPlaying,
                 MacroState.LOADED_MACRO.isPaused
         );
-
         controls.render(graphics);
 
-        // progress bar (disabled button texture background)
         int buttonX = 65;
         int buttonY = controls.calculateRect().getY() - 19;
-        int buttonWidth = graphics.guiWidth() - 130;
+        int buttonWidth = Math.max(4, graphics.guiWidth() - 130);
         int buttonHeight = 12;
 
-        graphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderSystem.enableBlend();
-        RenderSystem.enableDepthTest();
-        graphics.blitSprite(PROGRESS_BACKGROUND, buttonX, buttonY, buttonWidth, buttonHeight);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, PROGRESS_BACKGROUND, buttonX, buttonY, buttonWidth, buttonHeight);
 
         int barX = buttonX + 1;
         int barY = buttonY + 1;
         int barMaxWidth = buttonWidth - 2;
         int barHeight = buttonHeight - 2;
 
-        float completion = (float) MacroState.LOADED_MACRO.ticksElapsed / (float) MacroState.LOADED_MACRO.duration;
+        int duration = Math.max(1, MacroState.LOADED_MACRO.duration);
+        float completion = Math.min(1.0f, Math.max(0.0f, (float) MacroState.LOADED_MACRO.ticksElapsed / duration));
         int barWidth = Math.round(completion * barMaxWidth);
 
         String elapsed = MacroCraft.formatTicks(MacroState.LOADED_MACRO.ticksElapsed);
-        String remaining = MacroCraft.formatTicks(MacroState.LOADED_MACRO.duration - MacroState.LOADED_MACRO.ticksElapsed);
+        String remaining = MacroCraft.formatTicks(Math.max(0, MacroState.LOADED_MACRO.duration - MacroState.LOADED_MACRO.ticksElapsed));
 
         RenderUtils.drawText(graphics, elapsed, buttonX - GuiUtils.getTextRenderer().width(elapsed) - 5, buttonY + 2);
         RenderUtils.drawText(graphics, "-" + remaining, buttonX + buttonWidth + 5, buttonY + 2);
 
-        if (barWidth == 0) return;
-
-        try {
-            graphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-            RenderSystem.enableBlend();
-            RenderSystem.enableDepthTest();
-            graphics.blitSprite(PROGRESS_BAR, barX, barY, barWidth, barHeight);
-        } catch (ArithmeticException ignored) {
-            // ignore divide by zero
+        if (barWidth > 0) {
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, PROGRESS_BAR, barX, barY, barWidth, barHeight);
         }
     }
 
@@ -103,21 +87,14 @@ public class MacroPlayHud {
         MacroCraftKeybinds.checkKeybind(
                 code,
                 () -> {
-                    if (MacroState.LOADED_MACRO.isPaused) {
-                        MacroState.LOADED_MACRO.resumeMacro();
-                    }
+                    if (MacroState.LOADED_MACRO.isPaused) MacroState.LOADED_MACRO.resumeMacro();
                 },
                 () -> {
-                    if (MacroState.LOADED_MACRO.isPlaying) {
-                        MacroState.LOADED_MACRO.pauseMacro();
-                    }
+                    if (MacroState.LOADED_MACRO.isPlaying) MacroState.LOADED_MACRO.pauseMacro();
                 },
                 () -> {
-                    if (MacroState.LOADED_MACRO.isPlaying || MacroState.LOADED_MACRO.isPaused) {
-                        MacroState.LOADED_MACRO.endMacro();
-                    }
+                    if (MacroState.LOADED_MACRO.isPlaying || MacroState.LOADED_MACRO.isPaused) MacroState.LOADED_MACRO.endMacro();
                 }
         );
     }
-
 }
