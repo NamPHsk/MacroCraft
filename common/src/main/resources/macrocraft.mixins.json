@@ -9,8 +9,7 @@
     "KeyboardListener",
     "MinecraftMixin",
     "MouseInvoker",
-    "MouseListener",
-    "PauseScreenMixin"
+    "MouseListener"
   ],
   "injectors": {
     "defaultRequire": 1
