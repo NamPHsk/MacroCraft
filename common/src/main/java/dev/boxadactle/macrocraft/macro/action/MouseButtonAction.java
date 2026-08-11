@@ -2,10 +2,11 @@ package dev.boxadactle.macrocraft.macro.action;
 
 import com.google.gson.JsonObject;
 import dev.boxadactle.boxlib.util.ClientUtils;
-import dev.boxadactle.macrocraft.MacroCraft;
-import dev.boxadactle.macrocraft.macro.MacroAction;
 import dev.boxadactle.macrocraft.listeners.MouseInvoker;
+import dev.boxadactle.macrocraft.macro.MacroAction;
+import dev.boxadactle.macrocraft.macro.MacroState;
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.input.MouseButtonInfo;
 
 public class MouseButtonAction extends MacroAction {
     int button;
@@ -14,7 +15,6 @@ public class MouseButtonAction extends MacroAction {
 
     public MouseButtonAction(int startTicks, int button, int action, int mods) {
         super(startTicks);
-
         this.button = button;
         this.action = action;
         this.mods = mods;
@@ -22,10 +22,15 @@ public class MouseButtonAction extends MacroAction {
 
     @Override
     public void execute() {
-        MouseHandler m = ClientUtils.getClient().mouseHandler;
+        MouseHandler handler = ClientUtils.getClient().mouseHandler;
         long window = ClientUtils.getWindow();
 
-        ((MouseInvoker)m).invokeMousePress(window, button, action, mods);
+        MacroState.IS_REPLAYING_INPUT = true;
+        try {
+            ((MouseInvoker) handler).invokeMouseButton(window, new MouseButtonInfo(button, mods), action);
+        } finally {
+            MacroState.IS_REPLAYING_INPUT = false;
+        }
     }
 
     @Override
@@ -34,7 +39,6 @@ public class MouseButtonAction extends MacroAction {
         dataObject.addProperty("button", button);
         dataObject.addProperty("action", action);
         dataObject.addProperty("mods", mods);
-
         return dataObject;
     }
 

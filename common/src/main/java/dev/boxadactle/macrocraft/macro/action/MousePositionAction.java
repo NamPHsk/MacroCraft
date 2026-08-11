@@ -3,8 +3,9 @@ package dev.boxadactle.macrocraft.macro.action;
 import com.google.gson.JsonObject;
 import dev.boxadactle.boxlib.util.ClientUtils;
 import dev.boxadactle.macrocraft.MacroCraft;
-import dev.boxadactle.macrocraft.macro.MacroAction;
 import dev.boxadactle.macrocraft.listeners.MouseInvoker;
+import dev.boxadactle.macrocraft.macro.MacroAction;
+import dev.boxadactle.macrocraft.macro.MacroState;
 import net.minecraft.client.MouseHandler;
 import org.lwjgl.glfw.GLFW;
 
@@ -15,20 +16,24 @@ public class MousePositionAction extends MacroAction {
 
     public MousePositionAction(int startTicks, double xpos, double ypos) {
         super(startTicks);
-
         this.xpos = xpos;
         this.ypos = ypos;
     }
 
     @Override
     public void execute() {
-        MouseHandler m = ClientUtils.getClient().mouseHandler;
+        MouseHandler handler = ClientUtils.getClient().mouseHandler;
         long window = ClientUtils.getWindow();
 
-        if (MacroCraft.CONFIG.get().moveMouseWhenPlaying)
-            GLFW.glfwSetCursorPos(window, xpos, ypos);
-
-        ((MouseInvoker) m).invokeMove(window, xpos, ypos);
+        MacroState.IS_REPLAYING_INPUT = true;
+        try {
+            if (MacroCraft.CONFIG.get().moveMouseWhenPlaying) {
+                GLFW.glfwSetCursorPos(window, xpos, ypos);
+            }
+            ((MouseInvoker) handler).invokeMove(window, xpos, ypos);
+        } finally {
+            MacroState.IS_REPLAYING_INPUT = false;
+        }
     }
 
     @Override
@@ -36,7 +41,6 @@ public class MousePositionAction extends MacroAction {
         JsonObject dataObject = new JsonObject();
         dataObject.addProperty("xpos", xpos);
         dataObject.addProperty("ypos", ypos);
-
         return dataObject;
     }
 

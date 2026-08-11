@@ -1,7 +1,9 @@
 package dev.boxadactle.macrocraft.listeners;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.Window;
 import dev.boxadactle.macrocraft.MacroCraft;
+import dev.boxadactle.macrocraft.macro.MacroState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,8 +17,8 @@ public class InputConstantsMixin {
             at = @At("HEAD"),
             cancellable = true
     )
-    private static void ignoreMouseGrabbing(long l, int i, double d, double e, CallbackInfo ci) {
-        if (MacroCraft.shouldIgnoreInput()) {
+    private static void ignoreMouseGrabbing(Window window, int cursorMode, double x, double y, CallbackInfo ci) {
+        if (MacroCraft.shouldIgnoreInput() && !MacroState.IS_REPLAYING_INPUT) {
             ci.cancel();
         }
     }

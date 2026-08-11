@@ -9,69 +9,49 @@ import dev.boxadactle.macrocraft.macro.MacroState;
 import dev.boxadactle.macrocraft.macro.action.KeyboardAction;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.gui.screens.ChatScreen;
-import org.lwjgl.glfw.GLFWKeyCallbackI;
+import net.minecraft.client.input.KeyEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(KeyboardHandler.class)
 public abstract class KeyboardListener {
 
-    @Inject(
-            method = "keyPress",
-            at = @At("HEAD")
-    )
-    private void recordMacro(long l, int i, int j, int k, int m, CallbackInfo ci) {
-        if (MacroState.IS_RECORDING) {
-            if (
-                    (ClientUtils.getCurrentScreen() instanceof ChatScreen && MacroCraft.CONFIG.get().ignoreChatTyping)
-                    || i == ((KeyAccessor)ClientUtils.getOptions().keyChat).getKey().getValue()
-            ) {
+    @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
+    private void macrocraft$handleKey(long window, int action, KeyEvent event, CallbackInfo ci) {
+        int key = event.key();
+
+        if (!MacroState.IS_REPLAYING_INPUT) {
+            if (MacroState.LOADED_MACRO.shouldRenderHud()) {
+                MacroPlayHud.checkKeys(key);
+            }
+            if (MacroState.shouldRenderHud()) {
+                MacroRecordHud.checkKeys(key);
+            }
+        }
+
+        if (MacroState.IS_RECORDING && !MacroState.IS_REPLAYING_INPUT) {
+            if ((ClientUtils.getCurrentScreen() instanceof ChatScreen && MacroCraft.CONFIG.get().ignoreChatTyping)
+                    || ClientUtils.getOptions().keyChat.matches(event)) {
                 MacroCraft.LOGGER.info("Ignoring KeyboardAction due to chat typing.");
-                return;
-            }
-
-            if (MacroCraftKeybinds.shouldIgnoreInput(i)) {
+            } else if (MacroCraftKeybinds.shouldIgnoreInput(key)) {
                 MacroCraft.LOGGER.info("Ignoring KeyboardAction due to keybind.");
-                return;
-            }
-
-            if (i == 256 && ClientUtils.getClient().isPaused()) {
+            } else if (key == 256 && ClientUtils.getClient().isPaused()) {
                 MacroCraft.LOGGER.info("Ignoring KeyboardAction due to escape key.");
-                return;
+            } else {
+                MacroState.addAction(new KeyboardAction(
+                        MacroState.ticksElapsed,
+                        event.key(),
+                        event.scancode(),
+                        action,
+                        event.modifiers()
+                ));
             }
+        }
 
-            MacroState.addAction(new KeyboardAction(MacroState.ticksElapsed, i, j, k, m));
+        if (MacroCraft.shouldIgnoreInput() && !MacroState.IS_REPLAYING_INPUT) {
+            ci.cancel();
         }
     }
-
-    // we block GLFW from handling the keyboard input instead of cancelling
-    // the minecraft methods when a macro is playing
-    // so our own code can still run
-    @ModifyArg(
-            method = "setup",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/mojang/blaze3d/platform/InputConstants;setupKeyboardCallbacks(JLorg/lwjgl/glfw/GLFWKeyCallbackI;Lorg/lwjgl/glfw/GLFWCharModsCallbackI;)V"
-            ),
-            index = 1
-    )
-    private GLFWKeyCallbackI ignoreGLFWKeyboard(GLFWKeyCallbackI gLFWKeyCallbackI) {
-        return (l, i, j, k, m) -> {
-            if (MacroState.LOADED_MACRO.shouldRenderHud()) {
-                MacroPlayHud.checkKeys(i);
-            }
-
-            if (MacroState.shouldRenderHud()) {
-                MacroRecordHud.checkKeys(i);
-            }
-
-            if (!MacroCraft.shouldIgnoreInput()) {
-                gLFWKeyCallbackI.invoke(l, i, j, k, m);
-            }
-        };
-    }
-
 }

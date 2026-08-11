@@ -17,6 +17,12 @@ public class MacroState {
     public static boolean IS_RECORDING = false;
     public static boolean IS_PAUSED = false;
 
+    /**
+     * True only while MacroCraft is injecting a recorded input back into Minecraft.
+     * Input mixins use this to distinguish replayed actions from real user input.
+     */
+    public static boolean IS_REPLAYING_INPUT = false;
+
     public static int ticksElapsed = 0;
 
     public static void loadMacro(Macro macro, String name) {

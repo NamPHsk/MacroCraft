@@ -2,15 +2,14 @@
   "required": true,
   "minVersion": "0.8",
   "package": "dev.boxadactle.macrocraft.listeners",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "JAVA_25",
   "client": [
     "InputConstantsMixin",
-    "KeyAccessor",
+    "KeyboardInvoker",
     "KeyboardListener",
     "MinecraftMixin",
     "MouseInvoker",
-    "MouseListener",
-    "PauseScreenMixin"
+    "MouseListener"
   ],
   "injectors": {
     "defaultRequire": 1

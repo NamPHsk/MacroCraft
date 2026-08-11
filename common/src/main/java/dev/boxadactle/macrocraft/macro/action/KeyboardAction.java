@@ -2,9 +2,11 @@ package dev.boxadactle.macrocraft.macro.action;
 
 import com.google.gson.JsonObject;
 import dev.boxadactle.boxlib.util.ClientUtils;
-import dev.boxadactle.macrocraft.MacroCraft;
+import dev.boxadactle.macrocraft.listeners.KeyboardInvoker;
 import dev.boxadactle.macrocraft.macro.MacroAction;
+import dev.boxadactle.macrocraft.macro.MacroState;
 import net.minecraft.client.KeyboardHandler;
+import net.minecraft.client.input.KeyEvent;
 
 public class KeyboardAction extends MacroAction {
     int key;
@@ -14,7 +16,6 @@ public class KeyboardAction extends MacroAction {
 
     public KeyboardAction(int startTicks, int key, int scancode, int action, int mods) {
         super(startTicks);
-
         this.key = key;
         this.scancode = scancode;
         this.action = action;
@@ -23,10 +24,15 @@ public class KeyboardAction extends MacroAction {
 
     @Override
     public void execute() {
-        KeyboardHandler k =  ClientUtils.getClient().keyboardHandler;
+        KeyboardHandler handler = ClientUtils.getClient().keyboardHandler;
         long window = ClientUtils.getWindow();
 
-        k.keyPress(window, key, scancode, action, mods);
+        MacroState.IS_REPLAYING_INPUT = true;
+        try {
+            ((KeyboardInvoker) handler).invokeKeyPress(window, action, new KeyEvent(key, scancode, mods));
+        } finally {
+            MacroState.IS_REPLAYING_INPUT = false;
+        }
     }
 
     @Override
@@ -36,7 +42,6 @@ public class KeyboardAction extends MacroAction {
         dataObject.addProperty("scancode", scancode);
         dataObject.addProperty("action", action);
         dataObject.addProperty("mods", mods);
-
         return dataObject;
     }
 
