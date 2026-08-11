@@ -33,11 +33,11 @@ public class MacroCraftEvents {
     @SubscribeEvent
     public static void renderMacroHud(RenderGuiEvent.Post event) {
         if (MacroState.LOADED_MACRO.shouldRenderHud()) {
-            MacroPlayHud.render(event.getGuiGraphics());
+            MacroPlayHud.render(event.getGuiGraphicsExtractor());
         }
 
         if (MacroState.shouldRenderHud()) {
-            MacroRecordHud.render(event.getGuiGraphics());
+            MacroRecordHud.render(event.getGuiGraphicsExtractor());
         }
     }
 
