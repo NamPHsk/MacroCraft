@@ -7,14 +7,13 @@ import dev.boxadactle.boxlib.layouts.layout.RowLayout;
 import dev.boxadactle.boxlib.util.GuiUtils;
 import dev.boxadactle.macrocraft.MacroCraft;
 import dev.boxadactle.macrocraft.MacroCraftKeybinds;
-import dev.boxadactle.macrocraft.listeners.KeyAccessor;
 import dev.boxadactle.macrocraft.macro.MacroState;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 
 public class MacroRecordHud {
 
-    public static void render(GuiGraphics graphics) {
+    public static void render(GuiGraphicsExtractor graphics) {
         RowLayout information = new RowLayout(0, 0, 10);
 
         information.addComponent(new CenteredParagraphComponent(
@@ -31,7 +30,7 @@ public class MacroRecordHud {
                 0,
                 Component.translatable(
                         "hud.macrocraft.hide",
-                        GuiUtils.brackets(((KeyAccessor)MacroCraftKeybinds.hideGui).getKey().getDisplayName())
+                        GuiUtils.brackets(MacroCraftKeybinds.hideGui.getTranslatedKeyMessage())
                 )
         ));
 
@@ -41,7 +40,6 @@ public class MacroRecordHud {
                 information.calculateRect().getHeight() + 5,
                 information
         );
-
         centeredInformation.render(graphics);
 
         RenderingLayout controls = MacroControls.createButtons(
@@ -49,7 +47,6 @@ public class MacroRecordHud {
                 MacroState.IS_RECORDING,
                 MacroState.IS_PAUSED
         );
-
         controls.render(graphics);
     }
 
@@ -57,21 +54,14 @@ public class MacroRecordHud {
         MacroCraftKeybinds.checkKeybind(
                 code,
                 () -> {
-                    if (MacroState.IS_PAUSED) {
-                        MacroState.resumeRecording();
-                    }
+                    if (MacroState.IS_PAUSED) MacroState.resumeRecording();
                 },
                 () -> {
-                    if (MacroState.IS_RECORDING) {
-                        MacroState.pauseRecording();
-                    }
+                    if (MacroState.IS_RECORDING) MacroState.pauseRecording();
                 },
                 () -> {
-                    if (MacroState.IS_RECORDING || MacroState.IS_PAUSED) {
-                        MacroState.stopRecording();
-                    }
+                    if (MacroState.IS_RECORDING || MacroState.IS_PAUSED) MacroState.stopRecording();
                 }
         );
     }
-
 }
