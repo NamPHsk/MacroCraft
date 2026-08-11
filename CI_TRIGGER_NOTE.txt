@@ -1,0 +1,1 @@
+Temporary CI trigger support for the Minecraft 26.2 port. This file can be removed after the port is validated.
