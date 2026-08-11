@@ -1,20 +1,15 @@
 name: Port 26.2 CI
 
 on:
+  push:
   workflow_dispatch:
-  issues:
-    types: [opened]
-  schedule:
-    - cron: '*/5 * * * *'
 
 permissions:
   contents: read
 
 jobs:
   build-port:
-    if: github.event_name != 'issues' || github.event.issue.title == 'trigger: port-26.2-ci'
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout port branch
         uses: actions/checkout@v4
@@ -25,7 +20,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '25'
-          distribution: 'temurin'
+          distribution: temurin
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -33,16 +28,11 @@ jobs:
       - name: Build
         run: ./gradlew build --stacktrace --no-daemon
 
-      - name: Upload Fabric jars
+      - name: Upload build jars
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: macrocraft-26.2-fabric
-          path: fabric/build/libs/*.jar
-
-      - name: Upload NeoForge jars
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: macrocraft-26.2-neoforge
-          path: neoforge/build/libs/*.jar
+          name: macrocraft-26.2-build
+          path: |
+            fabric/build/libs/*.jar
+            neoforge/build/libs/*.jar
