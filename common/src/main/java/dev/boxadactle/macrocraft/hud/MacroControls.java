@@ -6,26 +6,25 @@ import dev.boxadactle.boxlib.layouts.component.CenteredParagraphComponent;
 import dev.boxadactle.boxlib.layouts.component.LayoutContainerComponent;
 import dev.boxadactle.boxlib.layouts.layout.CenteredLayout;
 import dev.boxadactle.boxlib.layouts.layout.ColumnLayout;
-import dev.boxadactle.boxlib.layouts.layout.PaddingLayout;
 import dev.boxadactle.boxlib.layouts.layout.RowLayout;
-import dev.boxadactle.boxlib.util.ClientUtils;
 import dev.boxadactle.boxlib.util.GuiUtils;
+import dev.boxadactle.macrocraft.MacroCraft;
 import dev.boxadactle.macrocraft.MacroCraftKeybinds;
-import dev.boxadactle.macrocraft.listeners.KeyAccessor;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 
 public class MacroControls {
 
-    public static final ResourceLocation PAUSE_DISABLED = new ResourceLocation("macrocraft", "textures/gui/pause_disabled.png");
-    public static final ResourceLocation PAUSE_ENABLED = new ResourceLocation("macrocraft", "textures/gui/pause_enabled.png");
-    public static final ResourceLocation PLAY_DISABLED = new ResourceLocation("macrocraft", "textures/gui/play_disabled.png");
-    public static final ResourceLocation PLAY_ENABLED = new ResourceLocation("macrocraft", "textures/gui/play_enabled.png");
-    public static final ResourceLocation STOP = new ResourceLocation("macrocraft", "textures/gui/stop.png");
+    public static final Identifier PAUSE_DISABLED = Identifier.fromNamespaceAndPath(MacroCraft.MOD_ID, "textures/gui/pause_disabled.png");
+    public static final Identifier PAUSE_ENABLED = Identifier.fromNamespaceAndPath(MacroCraft.MOD_ID, "textures/gui/pause_enabled.png");
+    public static final Identifier PLAY_DISABLED = Identifier.fromNamespaceAndPath(MacroCraft.MOD_ID, "textures/gui/play_disabled.png");
+    public static final Identifier PLAY_ENABLED = Identifier.fromNamespaceAndPath(MacroCraft.MOD_ID, "textures/gui/play_enabled.png");
+    public static final Identifier STOP = Identifier.fromNamespaceAndPath(MacroCraft.MOD_ID, "textures/gui/stop.png");
 
     static int padding = 5;
 
-    public static RenderingLayout createButtons(GuiGraphics graphics, boolean disablePlayButton, boolean disablePauseButton) {
+    public static RenderingLayout createButtons(GuiGraphicsExtractor graphics, boolean disablePlayButton, boolean disablePauseButton) {
         RowLayout layout = new RowLayout(0, 0, padding);
 
         layout.addComponent(new LayoutContainerComponent(renderPlayButton(disablePlayButton)));
@@ -45,18 +44,12 @@ public class MacroControls {
         ColumnLayout text = new ColumnLayout(0, 0, 0);
         text.addComponent(new CenteredParagraphComponent(
                 0,
-                GuiUtils.brackets(((KeyAccessor) MacroCraftKeybinds.playMacro).getKey().getDisplayName())
+                GuiUtils.brackets(MacroCraftKeybinds.playMacro.getTranslatedKeyMessage())
         ));
         layout.addComponent(new LayoutContainerComponent(
-                new CenteredLayout(
-                        0, 0,
-                        36, text.calculateRect().getHeight(),
-                        text
-                )
+                new CenteredLayout(0, 0, 36, text.calculateRect().getHeight(), text)
         ));
-
         return layout;
-
     }
 
     static RenderingLayout renderPauseButton(boolean isDisabled) {
@@ -66,16 +59,11 @@ public class MacroControls {
         ColumnLayout text = new ColumnLayout(0, 0, 0);
         text.addComponent(new CenteredParagraphComponent(
                 0,
-                GuiUtils.brackets(((KeyAccessor) MacroCraftKeybinds.pauseMacro).getKey().getDisplayName())
+                GuiUtils.brackets(MacroCraftKeybinds.pauseMacro.getTranslatedKeyMessage())
         ));
         layout.addComponent(new LayoutContainerComponent(
-                new CenteredLayout(
-                        0, 0,
-                        36, text.calculateRect().getHeight(),
-                        text
-                )
+                new CenteredLayout(0, 0, 36, text.calculateRect().getHeight(), text)
         ));
-
         return layout;
     }
 
@@ -86,22 +74,16 @@ public class MacroControls {
         ColumnLayout text = new ColumnLayout(0, 0, 0);
         text.addComponent(new CenteredParagraphComponent(
                 0,
-                GuiUtils.brackets(((KeyAccessor) MacroCraftKeybinds.stopMacro).getKey().getDisplayName())
+                GuiUtils.brackets(MacroCraftKeybinds.stopMacro.getTranslatedKeyMessage())
         ));
         layout.addComponent(new LayoutContainerComponent(
-                new CenteredLayout(
-                        0, 0,
-                        36, text.calculateRect().getHeight(),
-                        text
-                )
+                new CenteredLayout(0, 0, 36, text.calculateRect().getHeight(), text)
         ));
-
         return layout;
     }
 
-    private static class ImageRendererComponent extends LayoutComponent<ResourceLocation> {
-
-        public ImageRendererComponent(ResourceLocation component) {
+    private static class ImageRendererComponent extends LayoutComponent<Identifier> {
+        public ImageRendererComponent(Identifier component) {
             super(component);
         }
 
@@ -116,16 +98,9 @@ public class MacroControls {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int x, int y) {
+        public void render(GuiGraphicsExtractor graphics, int x, int y) {
             int size = 36;
-            graphics.blit(
-                    component,
-                    x, y,
-                    size, size,
-                    size, size,
-                    size, size
-            );
+            graphics.blit(RenderPipelines.GUI_TEXTURED, component, x, y, 0.0f, 0.0f, size, size, size, size);
         }
     }
-
 }
