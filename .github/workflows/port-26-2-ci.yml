@@ -26,7 +26,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build
-        run: ./gradlew build --stacktrace --no-daemon
+        run: bash ./gradlew build --stacktrace --no-daemon
 
       - name: Upload build jars
         if: success()
