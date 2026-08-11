@@ -24,8 +24,10 @@
     "macrocraft.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.14",
-    "minecraft": ">=1.20.5",
-    "boxlib": ">=13.0.0"
+    "fabricloader": ">=0.19.3",
+    "fabric-api": ">=0.154.2+26.2",
+    "minecraft": "26.2",
+    "java": ">=25",
+    "boxlib": ">=22.0.1"
   }
 }
