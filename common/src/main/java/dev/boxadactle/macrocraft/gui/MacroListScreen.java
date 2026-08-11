@@ -1,22 +1,23 @@
 package dev.boxadactle.macrocraft.gui;
 
 import com.google.common.collect.ImmutableList;
+import dev.boxadactle.boxlib.gui.config.BConfigList;
 import dev.boxadactle.boxlib.gui.config.BOptionButton;
 import dev.boxadactle.boxlib.gui.config.BOptionHelper;
 import dev.boxadactle.boxlib.gui.config.BOptionScreen;
-import dev.boxadactle.boxlib.gui.config.widget.button.BConfigScreenButton;
 import dev.boxadactle.boxlib.gui.config.widget.button.BCustomButton;
+import dev.boxadactle.boxlib.gui.config.widget.button.BScreenButton;
 import dev.boxadactle.boxlib.gui.config.widget.label.BCenteredLabel;
 import dev.boxadactle.boxlib.gui.config.widget.label.BLabel;
 import dev.boxadactle.boxlib.util.ClientUtils;
 import dev.boxadactle.boxlib.util.GuiUtils;
-import dev.boxadactle.boxlib.util.RenderUtils;
 import dev.boxadactle.macrocraft.fs.MacroFile;
 import dev.boxadactle.macrocraft.macro.Macro;
 import dev.boxadactle.macrocraft.macro.MacroState;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -25,17 +26,8 @@ import java.util.List;
 
 public class MacroListScreen extends BOptionScreen {
     public MacroListScreen(Screen parent) {
-        super(parent);
-    }
-
-    @Override
-    protected int getScrollingWidgetStart() {
-        return super.getScrollingWidgetStart() + 40;
-    }
-
-    @Override
-    protected int getScrollbarPosition() {
-        return super.getScrollbarPosition() + 100;
+        super(parent, Component.translatable("screen.macrocraft.macroList.title"));
+        this.parent = parent;
     }
 
     @Override
@@ -49,62 +41,48 @@ public class MacroListScreen extends BOptionScreen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int i, int j, float f) {
-        super.render(guiGraphics, i, j, f);
-
-        RenderUtils.drawTextCentered(guiGraphics, Component.translatable("screen.macrocraft.record.loaded", MacroState.MACRO_NAME), this.width / 2, 25);
+    protected int getScrollbarX() {
+        return Math.min(width - 10, width / 2 + 190);
     }
 
     @Override
-    protected Component getName() {
-        return Component.translatable("screen.macrocraft.macroList.title");
-    }
-
-    @Override
-    protected void initFooter(int startX, int startY) {
-        Button doneButton = createCancelButton(startX, startY, parent);
+    protected void initFooter(LinearLayout layout) {
+        Button doneButton = createDoneButton(parent);
         doneButton.setMessage(GuiUtils.DONE);
+        layout.addChild(doneButton);
 
-        addRenderableWidget(doneButton);
+        Button recordButton = Button.builder(
+                Component.translatable("screen.macrocraft.macroList.record"),
+                b -> ClientUtils.setScreen(new MacroRecordScreen(this))
+        ).build();
+        layout.addChild(recordButton);
 
-        initMacroButtons(startX);
-    }
-
-    private void initMacroButtons(int startX) {
-        int startY = getScrollingWidgetStart() - 20;
-
-        Button recordButton = createHalfCancelButton(startX, startY, (b) -> {
-            ClientUtils.setScreen(new MacroRecordScreen(this));
-        });
-        recordButton.setMessage(Component.translatable("screen.macrocraft.macroList.record"));
-
-        Button playButton = createHalfSaveButton(startX, startY, (b) -> {
-            ClientUtils.setScreen(new MacroPlayScreen(this));
-        });
-        playButton.setMessage(Component.translatable("screen.macrocraft.macroList.play"));
-
-        addRenderableWidget(recordButton);
-        addRenderableWidget(playButton);
+        Button playButton = Button.builder(
+                Component.translatable("screen.macrocraft.macroList.play"),
+                b -> ClientUtils.setScreen(new MacroPlayScreen(this))
+        ).build();
+        layout.addChild(playButton);
     }
 
     @Override
-    protected void initConfigButtons() {
-        List<File> macroFiles = MacroFile.getMacroFiles();
+    protected void addOptions() {
+        addConfigLine(new BCenteredLabel(Component.translatable("screen.macrocraft.record.loaded", MacroState.MACRO_NAME)));
 
+        List<File> macroFiles = MacroFile.getMacroFiles();
         if (!macroFiles.isEmpty()) {
             for (File file : macroFiles) {
-                this.configList.addEntry(new FileEntry(file.getName()));
+                configList.addEntry(new FileEntry(file.getName()));
             }
         } else {
             addConfigLine(new BCenteredLabel(Component.translatable("screen.macrocraft.macroList.noMacros")));
         }
     }
 
-    public class FileEntry extends ConfigList.ConfigEntry {
-        BLabel label;
-        BCustomButton loadButton;
-        BConfigScreenButton editButton;
-        BCustomButton deleteButton;
+    public class FileEntry extends BConfigList.ConfigEntry {
+        private final BLabel label;
+        private final BCustomButton loadButton;
+        private final BScreenButton editButton;
+        private final BCustomButton deleteButton;
 
         public FileEntry(String filename) {
             this.label = new BLabel(Component.literal(filename));
@@ -112,15 +90,17 @@ public class MacroListScreen extends BOptionScreen {
                 @Override
                 protected void buttonClicked(BOptionButton<?> button) {
                     Macro macro = MacroFile.loadMacro(filename);
-                    MacroState.loadMacro(macro, MacroFile.resolveFilename(filename));
-                    ClientUtils.setScreen(MacroListScreen.this.parent);
+                    if (macro != null) {
+                        MacroState.loadMacro(macro, MacroFile.resolveFilename(filename));
+                        ClientUtils.setScreen(MacroListScreen.this.parent);
+                    }
                 }
             };
 
-            this.editButton = new BConfigScreenButton(
+            this.editButton = new BScreenButton(
                     Component.translatable("screen.macrocraft.macroList.edit"),
                     MacroListScreen.this,
-                    (parent) -> new MacroScreen(parent, MacroFile.resolveMacroPath(filename))
+                    p -> new MacroScreen(p, MacroFile.resolveMacroPath(filename))
             );
 
             this.deleteButton = new BCustomButton(Component.translatable("screen.macrocraft.macroList.delete")) {
@@ -135,7 +115,6 @@ public class MacroListScreen extends BOptionScreen {
                             },
                             () -> ClientUtils.setScreen(new MacroListScreen(MacroListScreen.this.parent))
                     );
-
                 }
             };
         }
@@ -151,36 +130,36 @@ public class MacroListScreen extends BOptionScreen {
         }
 
         @Override
-        public void render(GuiGraphics p_93523_, int index, int y1, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            int p1 = BOptionHelper.padding() / 2;
-            int p2 = BOptionHelper.padding() / 2;
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            int padding = BOptionHelper.padding();
+            int x = getX();
+            int y = getY();
+            int entryWidth = getWidth();
 
-            int y = y1 + 2;
-
-            int width1 = (int) (entryWidth * 0.66 - p1);
-            int bwidth = (int) (entryWidth * 0.34 - p2);
-            int width2 = bwidth / 3 - p2;
+            int labelWidth = (int) (entryWidth * 0.62) - padding;
+            int buttonsWidth = entryWidth - labelWidth;
+            int buttonWidth = Math.max(1, buttonsWidth / 3 - padding);
 
             label.setX(x);
             label.setY(y);
-            label.setWidth(width1);
+            label.setWidth(labelWidth);
 
-            loadButton.setX(x + width1);
+            loadButton.setX(x + labelWidth + padding);
             loadButton.setY(y);
-            loadButton.setWidth(width2);
+            loadButton.setWidth(buttonWidth);
 
-            editButton.setX(x + width1 + width2);
+            editButton.setX(x + labelWidth + padding + buttonWidth + padding);
             editButton.setY(y);
-            editButton.setWidth(width2);
+            editButton.setWidth(buttonWidth);
 
-            deleteButton.setX(x + width1 + width2 * 2);
+            deleteButton.setX(x + labelWidth + padding + (buttonWidth + padding) * 2);
             deleteButton.setY(y);
-            deleteButton.setWidth(width2);
+            deleteButton.setWidth(buttonWidth);
 
-            label.render(p_93523_, mouseX, mouseY, tickDelta);
-            loadButton.render(p_93523_, mouseX, mouseY, tickDelta);
-            editButton.render(p_93523_, mouseX, mouseY, tickDelta);
-            deleteButton.render(p_93523_, mouseX, mouseY, tickDelta);
+            label.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+            loadButton.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+            editButton.extractRenderState(graphics, mouseX, mouseY, tickDelta);
+            deleteButton.extractRenderState(graphics, mouseX, mouseY, tickDelta);
         }
     }
 }
