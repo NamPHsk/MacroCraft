@@ -17,7 +17,7 @@ import java.util.Date;
 public class MacroCraft {
 	public static final String MOD_NAME = "MacroCraft";
 	public static final String MOD_ID = "macrocraft";
-	public static final String VERSION = "3.0.0";
+	public static final String VERSION = "4.0.0";
 	public static final String VERSION_STRING = MOD_NAME + " v" + VERSION;
 
 	public static final ModLogger LOGGER = new ModLogger(MOD_NAME);
@@ -74,9 +74,7 @@ public class MacroCraft {
 	}
 
 	public static boolean shouldIgnoreInput() {
-		return
-				(MacroState.LOADED_MACRO.isPlaying ||
-				MacroState.LOADED_MACRO.isPaused) &&
-				MacroCraft.CONFIG.get().blockInputsWhenPlaying;
+		return (MacroState.LOADED_MACRO.isPlaying || MacroState.LOADED_MACRO.isPaused)
+				&& MacroCraft.CONFIG.get().blockInputsWhenPlaying;
 	}
 }
