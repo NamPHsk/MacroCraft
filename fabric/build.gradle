@@ -34,7 +34,7 @@ dependencies {
     common(project(path: ':common')) { transitive false }
     shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
 
-    implementation("dev.boxadactle:Boxlib-fabric:${rootProject.boxlib_version}") { transitive = false }
+    implementation("boxlib:fabric:${rootProject.boxlib_version}") { transitive = false }
     implementation("com.terraformersmc:modmenu:${rootProject.modmenu_version}") { transitive = true }
 }
 
