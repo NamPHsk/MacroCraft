@@ -3,5 +3,5 @@ architectury {
 }
 
 dependencies {
-    implementation "dev.boxadactle:Boxlib-common:$rootProject.boxlib_version"
+    compileOnly "boxlib:fabric:$rootProject.boxlib_version"
 }
