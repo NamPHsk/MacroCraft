@@ -24,8 +24,17 @@ subprojects {
 
     repositories {
         mavenCentral()
-        maven { url = "https://maven.boxadactle.dev/" }
         maven { url = "https://maven.terraformersmc.com/releases/" }
+        ivy {
+            name = 'BoxLibGitHubReleases'
+            url = uri('https://github.com/Boxadactle/BoxLib/releases/download/')
+            patternLayout {
+                artifact '[revision]/BoxLib-[module]-[revision].[ext]'
+            }
+            metadataSources {
+                artifact()
+            }
+        }
     }
 
     dependencies {
