@@ -11,35 +11,28 @@ import dev.boxadactle.boxlib.util.ClientUtils;
 import dev.boxadactle.macrocraft.MacroCraft;
 import dev.boxadactle.macrocraft.fs.MacroFile;
 import dev.boxadactle.macrocraft.macro.MacroState;
+import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 public class MacroSaveScreen extends BOptionScreen {
-    String fileName;
+    String fileName = "";
     BCustomButton saveButton;
 
     public MacroSaveScreen(Screen parent) {
-        super(parent);
+        super(parent, Component.translatable("screen.macrocraft.save.title"));
+        this.parent = parent;
     }
 
     @Override
-    protected Component getName() {
-        return Component.literal("screen.macrocraft.save.title");
+    protected void initFooter(LinearLayout layout) {
+        layout.addChild(createCancelButton(parent));
     }
 
     @Override
-    protected void initFooter(int startX, int startY) {
-        addRenderableWidget(createCancelButton(startX, startY, parent));
-    }
-
-    @Override
-    protected void initConfigButtons() {
-        // loaded macro
+    protected void addOptions() {
         addConfigLine(new BCenteredLabel(Component.translatable("screen.macrocraft.record.loaded", MacroState.MACRO_NAME)));
-
-        // macro size
         addConfigLine(new BCenteredLabel(Component.translatable("screen.macrocraft.record.size", MacroState.LOADED_MACRO.actions.size())));
-
         addConfigLine(new BSpacingEntry());
 
         if (MacroState.HAS_UNSAVED_CHANGES) {
@@ -49,42 +42,40 @@ public class MacroSaveScreen extends BOptionScreen {
                     String file = MacroFile.resolveFilename(fileName);
                     MacroCraft.LOGGER.info("Saving macro to file: " + file);
 
-                    if (MacroFile.doesMacroExist(fileName)) {
-                        MacroCraft.LOGGER.warn("File already exists! Prompting user...");
+                    Runnable save = () -> {
+                        MacroFile.saveMacro(fileName, MacroState.LOADED_MACRO);
+                        MacroState.loadMacro(MacroState.LOADED_MACRO, fileName);
+                        ClientUtils.setScreen(parent);
+                    };
 
+                    if (MacroFile.doesMacroExist(fileName)) {
                         ClientUtils.confirm(
                                 Component.translatable("screen.macrocraft.overwrite.title", file),
                                 Component.translatable("screen.macrocraft.overwrite.description", file),
                                 () -> {
                                     MacroFile.deleteMacroFile(fileName);
-                                    MacroFile.saveMacro(fileName, MacroState.LOADED_MACRO);
-                                    ClientUtils.setScreen(parent);
+                                    save.run();
                                 },
                                 () -> ClientUtils.setScreen(MacroSaveScreen.this)
                         );
+                        return;
                     }
 
-                    MacroFile.saveMacro(fileName, MacroState.LOADED_MACRO);
-                    MacroState.loadMacro(MacroState.LOADED_MACRO, fileName);
-
-                    ClientUtils.setScreen(parent);
+                    save.run();
                 }
             };
+            saveButton.active = false;
 
             addConfigLine(
-                    new BStringField("", (f) -> {
-                        fileName = f;
-                        saveButton.active = !f.isEmpty();
+                    new BStringField("", value -> {
+                        fileName = value.trim();
+                        saveButton.active = !fileName.isEmpty();
                     }),
                     new BLabel(Component.literal(MacroFile.MACRO_EXTENSION))
             );
-
             addConfigLine(saveButton);
         } else {
             addConfigLine(new BCenteredLabel(Component.translatable("screen.macrocraft.save.alreadySaved")));
         }
-
-
-
     }
 }
