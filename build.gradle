@@ -1,8 +1,7 @@
 plugins {
     id 'dev.architectury.loom' version '1.17-SNAPSHOT' apply false
     id 'architectury-plugin' version '3.4-SNAPSHOT'
-    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
-    id "me.shedaniel.unified-publishing" version "0.1.+"
+    id 'com.gradleup.shadow' version '9.6.1' apply false
 }
 
 architectury {
@@ -24,6 +23,7 @@ subprojects {
     }
 
     repositories {
+        mavenCentral()
         maven { url = "https://maven.boxadactle.dev/" }
         maven { url = "https://maven.terraformersmc.com/releases/" }
     }
@@ -39,7 +39,7 @@ subprojects {
     }
 
     tasks.withType(JavaCompile).configureEach {
-        it.options.release = 25
+        options.release = 25
     }
 
     publishing {
@@ -48,8 +48,6 @@ subprojects {
                 artifactId = base.archivesName.get()
                 from components.java
             }
-        }
-        repositories {
         }
     }
 }
